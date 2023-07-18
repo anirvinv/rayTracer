@@ -2,12 +2,14 @@
 
 #define VEC3
 
-#include <stdbool.h>
-
+#include "point3.h"
 class vec3 {
    public:
     double x, y, z;
     vec3(double x, double y, double z);
+
+    double dot(const vec3& other);
+
     vec3 operator+(const vec3& other) const {
         return vec3(x + other.x, y + other.y, z + other.z);
     }
@@ -19,11 +21,11 @@ class vec3 {
     bool operator==(const vec3& other) const {
         return x == other.x && y == other.y && z == other.z;
     }
-    double dot(const vec3& other) const {
-        return x * other.x + y * other.y + z * other.z;
-    }
 };
 
 vec3::vec3(double x, double y, double z) : x(x), y(y), z(z) {}
 
+double vec3::dot(const vec3& other) {
+    return x * other.x + y * other.y + z * other.z;
+}
 #endif  // !VEC3

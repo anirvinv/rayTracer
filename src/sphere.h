@@ -7,13 +7,20 @@
 #include "point3.h"
 #include "ray.h"
 
-class sphere {
+class entity {
+   public:
+    virtual double intersection_t_value(ray& ray) = 0;
+    virtual vec3 get_unit_normal(point3& point) = 0;
+};
+
+class sphere : public entity {
    public:
     double radius;
     point3& center;
     sphere(double radius, point3& center);
 
     double intersection_t_value(ray& ray);
+    vec3 get_unit_normal(point3& point);
 };
 
 sphere::sphere(double radius, point3& center) : center(center) {
@@ -31,6 +38,11 @@ double sphere::intersection_t_value(ray& ray) {
     } else {
         return (-b - sqrt(discriminant)) / (2.0 * a);
     }
+}
+vec3 sphere::get_unit_normal(point3& point) {
+    vec3 x = vec3(point - center);
+    x = x / radius;
+    return x;
 }
 
 #endif  // !SPHERE

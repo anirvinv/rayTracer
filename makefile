@@ -1,2 +1,2 @@
-all: main.cpp
-	g++ -o main main.cpp -std=c++11 -Wall -Wextra -pedantic -O2
+all: src/main.cpp
+	g++ -o build/main src/main.cpp -std=gnu++17 -Wall -Wextra -pedantic -O2
