@@ -48,4 +48,9 @@ Point3::Point3(long double x, long double y, long double z) {
     this->z = z;
 }
 
+Vec3 normalize(Vec3 vec) {
+    double length = sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
+    return vec / length;
+}
+
 #endif  // !VEC3

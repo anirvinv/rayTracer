@@ -16,7 +16,7 @@ int main() {
     // out of the image Plane is positize z, into the Plane is negative z
     // the camera is at viewport
 
-    Point3 viewport = Point3(image_width / 2, image_height / 2, 300);
+    Point3 viewport = Point3(image_width / 2, image_height / 2, 500);
 
     Point3 light_source =
         Point3(image_width / 2 - 1000, image_height / 2 + 1500, 0);
@@ -39,7 +39,7 @@ int main() {
     sphere4.color = {0.65, 0.56, 0.32};
 
     // floor
-    Plane floor_plane = Plane(Vec3(0, -1, 0), Point3(0, -400, -1000));
+    Plane floor_plane = Plane(Vec3(0, 1, 0), Point3(0, -400, -1000));
     floor_plane.color = {0.45, 0.25, 0.25};
 
     Entity* entities[] = {&sphere1, &sphere2, &sphere3, &sphere4, &floor_plane};
@@ -71,46 +71,27 @@ int main() {
             }
 
             Point3 intersection = light_ray.get_point(min_t_value);
+            Vec3 normal = closest_object_ptr->get_unit_normal(intersection);
 
             Vec3 shadow_ray_direction =
-                static_cast<Vec3>(light_source - intersection);
-            Ray shadow_ray = Ray(intersection, shadow_ray_direction);
+                normalize(static_cast<Vec3>(light_source - intersection));
 
-            /*
-                if shadow ray intersects something else before the light source,
-               then it is in a shadow. The way we check:
-
-                Shadow ray is the ray that goes from the intersection point to
-               the light source. At t = 0, this ray intersects the object that
-               it is on. If it intersects another object before the light
-               source, then it is in a shadow. So we check if t>0 for any other
-               objects. If it is, then it is in a shadow.
-            */
-
-            bool in_shadow = false;
-            for (auto object_ptr : entities) {
-                long double t_value =
-                    object_ptr->intersection_t_value(shadow_ray);
-                if (t_value > 4.3e-17) {
-                    in_shadow = true;
-                    break;
-                }
-            }
+            double dot_product = std::max(
+                (long double)0,
+                shadow_ray_direction.dot(normal));  // this is cos(theta)
 
             // -1 < r,g,b < 1
             double r = closest_object_ptr->color.r;
             double g = closest_object_ptr->color.b;
             double b = closest_object_ptr->color.g;
 
-            if (in_shadow) {
-                r *= 0.5;
-                g *= 0.5;
-                b *= 0.5;
-            }
+            r *= dot_product;
+            g *= dot_product;
+            b *= dot_product;
 
-            int ir = static_cast<int>(255.999 * r);
-            int ig = static_cast<int>(255.999 * g);
-            int ib = static_cast<int>(255.999 * b);
+            int ir = static_cast<int>(255 * r);
+            int ig = static_cast<int>(255 * g);
+            int ib = static_cast<int>(255 * b);
 
             std::cout << ir << ' ' << ig << ' ' << ib << '\n';
         }
