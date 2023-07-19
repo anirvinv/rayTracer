@@ -1,8 +1,9 @@
 #include <iostream>
 
-#include "entity.h"
-#include "ray.h"
-#include "vec3.h"
+#include "../lib/canvas.h"
+#include "../lib/entity.h"
+#include "../lib/ray.h"
+#include "../lib/tuple.h"
 
 int main() {
     // Image
@@ -16,41 +17,40 @@ int main() {
     // out of the image Plane is positize z, into the Plane is negative z
     // the camera is at viewport
 
-    Point3 viewport = Point3(image_width / 2, image_height / 2, 500);
+    Tuple viewport = point(image_width / 2, image_height / 2, -500);
 
-    Point3 light_source =
-        Point3(image_width / 2 - 1000, image_height / 2 + 1500, 0);
+    Tuple light_source =
+        point(image_width / 2 - 1000, image_height / 2 + 1500, 0);
 
     // spheres
     Sphere sphere1 =
-        Sphere(400, Point3(image_width / 2, image_height / 2, -1000));
+        Sphere(400, point(image_width / 2, image_height / 2, 1000));
     sphere1.color = {0.95, 0.32, 0.16};
 
     Sphere sphere2 =
-        Sphere(400, Point3(image_width / 2 + 900, image_height / 2, -1000));
+        Sphere(400, point(image_width / 2 + 900, image_height / 2, 1000));
     sphere2.color = {0.16, 0.95, 0.32};
 
     Sphere sphere3 =
-        Sphere(400, Point3(image_width / 2 - 900, image_height / 2, -1000));
+        Sphere(400, point(image_width / 2 - 900, image_height / 2, 1000));
     sphere3.color = {0.16, 0.32, 0.95};
 
     Sphere sphere4 =
-        Sphere(200, Point3(image_width / 2, image_height / 2 - 100, -500));
+        Sphere(200, point(image_width / 2, image_height / 2 - 100, 500));
     sphere4.color = {0.65, 0.56, 0.32};
 
     // floor
-    Plane floor_plane = Plane(Vec3(0, 1, 0), Point3(0, -400, -1000));
+    Plane floor_plane = Plane(vector(0, 1, 0), point(0, -400, 1000));
     floor_plane.color = {0.45, 0.25, 0.25};
 
     Entity* entities[] = {&sphere1, &sphere2, &sphere3, &sphere4, &floor_plane};
 
-    std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+    Canvas canvas = Canvas(image_width, image_height);
 
     for (int j = image_height - 1; j >= 0; --j) {
-        std::cerr << "\rLines remaining: " << j << ' ' << std::flush;
         for (int i = 0; i < image_width; ++i) {
-            Point3 pixel_point = Point3(i, j, 0);
-            Vec3 ray_direction = Vec3(pixel_point - viewport);
+            Tuple pixel_point = point(i, j, 0);
+            Tuple ray_direction = pixel_point - viewport;
 
             Ray light_ray = Ray(viewport, ray_direction);
             double min_t_value = -1;
@@ -66,18 +66,17 @@ int main() {
             }
 
             if (min_t_value < 0) {
-                std::cout << "0 0 0\n";
+                canvas.set_pixel(i, j, {0, 0, 0});
                 continue;
             }
 
-            Point3 intersection = light_ray.get_point(min_t_value);
-            Vec3 normal = closest_object_ptr->get_unit_normal(intersection);
+            Tuple intersection = light_ray.get_point(min_t_value);
+            Tuple normal = closest_object_ptr->get_unit_normal(intersection);
 
-            Vec3 shadow_ray_direction =
-                normalize(static_cast<Vec3>(light_source - intersection));
+            Tuple shadow_ray_direction = normalize(light_source - intersection);
 
             double dot_product = std::max(
-                (long double)0,
+                (double)0,
                 shadow_ray_direction.dot(normal));  // this is cos(theta)
 
             // -1 < r,g,b < 1
@@ -89,12 +88,9 @@ int main() {
             g *= dot_product;
             b *= dot_product;
 
-            int ir = static_cast<int>(255 * r);
-            int ig = static_cast<int>(255 * g);
-            int ib = static_cast<int>(255 * b);
-
-            std::cout << ir << ' ' << ig << ' ' << ib << '\n';
+            canvas.set_pixel(i, j, {r, g, b});
         }
     }
-    std::cerr << "\nDone.\n";
+
+    canvas.write_ppm();
 }
