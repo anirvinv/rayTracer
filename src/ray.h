@@ -1,22 +1,21 @@
 #ifndef RAY
 #define RAY
 
-#include "point3.h"
 #include "vec3.h"
 
-class ray {
+class Ray {
    public:
-    point3& origin;
-    vec3& direction;
-    ray(point3& origin, vec3& direction);
-    point3 get_point(double t);
+    Point3& origin;
+    Vec3& direction;
+    Ray(Point3& origin, Vec3& direction);
+    Point3 get_point(double t);
 };
 
-ray::ray(point3& origin, vec3& direction)
+Ray::Ray(Point3& origin, Vec3& direction)
     : origin(origin), direction(direction) {}
 
-point3 ray::get_point(double t) {
-    point3 scaledDir = point3(direction * t);
+Point3 Ray::get_point(double t) {
+    Point3 scaledDir = Point3(direction * t);
     return origin + scaledDir;
 }
 #endif  // !RAY
