@@ -1,12 +1,10 @@
-CC=g++
-OUTDIR = ./build
+CXX := g++
+CXXFLAGS := -Werror -Wall -Wextra -pedantic -std=gnu++17
 
-all: src/main.cpp src/clock.cpp
-	$(CC) -o $(OUTDIR)/main src/main.cpp -std=gnu++17 -Wall -Wextra -pedantic -O2
-	$(CC) -o $(OUTDIR)/clock src/clock.cpp -std=gnu++17 -Wall -Wextra -pedantic -O2
+all: src/$(wildcard *.cpp)
+	$(CXX) $(CXXFLAGS) -o build/clock src/clock.cpp
+	$(CXX) $(CXXFLAGS) -o build/main src/main.cpp
 
-test: tests/test.cpp
-	g++ -o build/test tests/test.cpp -std=gnu++17 -Wall -Wextra -pedantic -O2
+test: tests/$(wildcard *.cpp)
+	$(CXX) $(CXXFLAGS) -o build/test tests/test.cpp
 	./build/test
-clean:
-	rm -rf build/*

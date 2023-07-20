@@ -8,10 +8,10 @@ class Tuple {
     static constexpr double EPSILON = 0.000001;
 
    public:
-    enum { vector, point };
+    enum { VECTOR, POINT };
     double x, y, z;
     int w;
-    // w=0 for vector, w=1 for point
+    // w=0 for vector_tuple, w=1 for point_tuple
 
     Tuple(double x, double y, double z, int w) : x(x), y(y), z(z), w(w) {}
     Tuple operator+(const Tuple& other) const {
@@ -34,19 +34,26 @@ class Tuple {
     double dot(const Tuple& other) const {
         return x * other.x + y * other.y + z * other.z + w * other.w;
     }
+    void print() const {
+        std::cerr << x << " " << y << " " << z << " " << w << std::endl;
+    }
 };
 
-Tuple point(double x, double y, double z) {
-    return Tuple(x, y, z, Tuple::point);
+Tuple point_tuple(double x, double y, double z) {
+    return Tuple(x, y, z, Tuple::POINT);
 }
-Tuple vector(double x, double y, double z) {
-    return Tuple(x, y, z, Tuple::vector);
+Tuple vector_tuple(double x, double y, double z) {
+    return Tuple(x, y, z, Tuple::VECTOR);
 }
 double magnitude(const Tuple& t) { return sqrt(t.dot(t)); }
 Tuple normalize(const Tuple& t) { return t / magnitude(t); }
 Tuple cross(const Tuple& a, const Tuple& b) {
-    return vector(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z,
-                  a.x * b.y - a.y * b.x);
+    return vector_tuple(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z,
+                        a.x * b.y - a.y * b.x);
+}
+
+Tuple reflect(const Tuple& in, const Tuple& normal) {
+    return in - normal * 2 * in.dot(normal);
 }
 
 #endif  // !TUPLE

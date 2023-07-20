@@ -7,7 +7,7 @@ int main() {
     const int image_height = 500, image_width = 500;
     Canvas canvas = Canvas(image_height, image_width);
     Matrix transform = rotation_z(M_PI / 6);
-    Tuple p = point(30, 30, 0);
+    Tuple p = point_tuple(30, 30, 0);
     for (int i = 0; i < 12; i++) {
         Tuple translated =
             translation(image_height / 2, image_width / 2, 0) * p;

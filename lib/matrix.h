@@ -10,14 +10,10 @@ class Matrix {
    public:
     int rows, cols;
     double* data;
-    Matrix(int rows, int cols) {
-        this->rows = rows;
-        this->cols = cols;
+    Matrix(int rows, int cols) : rows(rows), cols(cols) {
         this->data = new double[rows * cols];
     }
-    Matrix(int rows, int cols, double* data) {
-        this->rows = rows;
-        this->cols = cols;
+    Matrix(int rows, int cols, double* data) : rows(rows), cols(cols) {
         this->data = new double[rows * cols];
         for (int i = 0; i < rows * cols; ++i) {
             this->data[i] = data[i];
@@ -131,6 +127,8 @@ class Matrix {
 
     double determinant() {
         if (this->cols != this->rows) {
+            std::cerr << "cols: " << this->cols << " rows: " << this->rows
+                      << std::endl;
             throw std::invalid_argument("Matrix must be square");
         }
         if (this->cols == 1 && this->rows == 1) {
@@ -154,7 +152,7 @@ class Matrix {
 
     bool isInvertible() { return this->determinant() != 0; }
 
-    Matrix invert() {
+    Matrix inverse() {
         if (!this->isInvertible()) {
             throw std::invalid_argument("Matrix is not invertible");
         }
@@ -177,5 +175,13 @@ class Matrix {
         }
     }
 };
+
+Matrix identity_matrix(int n) {
+    Matrix result = Matrix(n, n);
+    for (int i = 0; i < n; ++i) {
+        result.set(i, i, 1);
+    }
+    return result;
+}
 
 #endif  // !MATRIX

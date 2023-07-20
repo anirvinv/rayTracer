@@ -7,21 +7,21 @@
 #include "../lib/tuple.h"
 
 int tuple_test() {
-    Tuple v1 = vector(1, 2, 3);
-    Tuple v2 = vector(2, 3, 4);
-    if (v1 + v2 != vector(3, 5, 7)) {
+    Tuple v1 = vector_tuple(1, 2, 3);
+    Tuple v2 = vector_tuple(2, 3, 4);
+    if (v1 + v2 != vector_tuple(3, 5, 7)) {
         std::cout << "v1 + v2 check failed" << std::endl;
         return 1;
     }
-    if (v1 - v2 != vector(-1, -1, -1)) {
+    if (v1 - v2 != vector_tuple(-1, -1, -1)) {
         std::cout << "v1 - v2 check failed" << std::endl;
         return 1;
     }
-    if (v1 * 2 != vector(2, 4, 6)) {
+    if (v1 * 2 != vector_tuple(2, 4, 6)) {
         std::cout << "v1 * 2 check failed" << std::endl;
         return 1;
     }
-    if (v1 / 2 != vector(0.5, 1, 1.5)) {
+    if (v1 / 2 != vector_tuple(0.5, 1, 1.5)) {
         std::cout << "v1 / 2 check failed" << std::endl;
         return 1;
     }
@@ -33,7 +33,8 @@ int tuple_test() {
         std::cout << "magnitude check failed" << std::endl;
         return 1;
     }
-    if (normalize(v1) != vector(1 / sqrt(14), 2 / sqrt(14), 3 / sqrt(14))) {
+    if (normalize(v1) !=
+        vector_tuple(1 / sqrt(14), 2 / sqrt(14), 3 / sqrt(14))) {
         std::cout << "normalize check failed" << std::endl;
         return 1;
     }
@@ -52,6 +53,14 @@ int matrix_test() {
 
     double m3_data[] = {5, 6, 6, 8, 2, 2, 2, 8, 6, 6, 2, 8, 2, 3, 6, 7};
     Matrix m3 = Matrix(4, 4, m3_data);
+
+    // clang-format off
+    double m4_data[] = {1, 0, 0, 1500, 
+                        0, 1, 0, 0, 
+                        0, 0, 1, 0, 
+                        0, 0, 0, 1};
+    // clang-format on
+    Matrix m4 = Matrix(4, 4, m4_data);
 
     if (m1 * m2 != product) {
         std::cout << "m1 * m2 != product" << std::endl;
@@ -73,19 +82,33 @@ int matrix_test() {
         std::cout << "m3 determinant check failed" << std::endl;
         return 1;
     }
+    if (abs(m4.determinant() - 1) > Tuple::EPSILON) {
+        std::cout << "m4 determinant check failed" << std::endl;
+        return 1;
+    }
 
     return 0;
 }
 
 int transform_test() {
-    Ray ray = Ray(point(0, 0, 0), vector(0, 0, 1));
-    Sphere sphere = Sphere(1, point(1, 1, 1));
-    Sphere translated = sphere.transform(translation(-1, -1, -1));
-
-    if (translated.intersection_t_value(ray) == -1) {
-        return 0;
+    Sphere sphere = Sphere(1, point_tuple(0, 0, 0));
+    Sphere translated = sphere.transform(translation(0, 1, 0));
+    Tuple normal =
+        translated.get_unit_normal(point_tuple(0, 1.70711, -0.70711));
+    if (normal != vector_tuple(0, 0.70711, -0.70711)) {
+        std::cout << "translated sphere normal check failed" << std::endl;
+        return 1;
     }
-    return 1;
+
+    // reflect test
+    Tuple v = vector_tuple(1, -1, 0);
+    Tuple n = vector_tuple(0, 1, 0);
+    Tuple r = reflect(v, n);
+    if (r != vector_tuple(1, 1, 0)) {
+        std::cout << "reflect check failed" << std::endl;
+        return 1;
+    }
+
     return 0;
 }
 
