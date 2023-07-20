@@ -4,8 +4,8 @@
 #include "entity.h"
 
 struct Light {
-    Tuple position;
-    Color intensity;
+    Tuple position = point_tuple(0, 0, 0);
+    Color intensity = {1, 1, 1};
 };
 
 Color tuple_to_color(Tuple t) { return {t.x, t.y, t.z}; }

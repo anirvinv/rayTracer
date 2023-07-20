@@ -7,6 +7,7 @@
 #include "../lib/ray.h"
 #include "../lib/transformations.h"
 #include "../lib/tuple.h"
+#include "../lib/world.h"
 
 bool double_eq(double a, double b) { return abs(a - b) < Tuple::EPSILON; }
 
@@ -167,6 +168,19 @@ int transformation_test() {
     return 0;
 }
 
+int world_test() {
+    World world = World();
+    if (world.entities.size() != 0 ||
+        world.light_source.position != point_tuple(0, 0, 0)) {
+        std::cout << "Default world initialization failed" << std::endl;
+        return 1;
+    }
+    std::vector<Entity> entities{Sphere(), Sphere()};
+    world.set_entities(entities);
+
+    return 0;
+}
+
 int main() {
     if (tuple_test()) {
         return 1;
@@ -178,6 +192,9 @@ int main() {
         return 1;
     }
     if (transformation_test()) {
+        return 1;
+    }
+    if (world_test()) {
         return 1;
     }
     std::cout << "All tests passed." << std::endl;

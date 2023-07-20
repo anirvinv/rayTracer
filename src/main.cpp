@@ -36,8 +36,8 @@ int main() {
 
     Canvas canvas = Canvas(image_width, image_height);
 
-    for (int j = -1 * image_height / 2; j < image_height / 2; j++) {
-        for (int i = -1 * image_width / 2; i < image_width / 2; i++) {
+    for (int j = -image_height / 2; j < image_height / 2; j++) {
+        for (int i = -image_width / 2; i < image_width / 2; i++) {
             // for each pixel, cast a ray from the viewport to the pixel
             // and see if it intersects with any of the objects
             // if it does, color the pixel with the color of the object

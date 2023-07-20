@@ -9,13 +9,11 @@ int main() {
     Matrix transform = rotation_z(M_PI / 6);
     Tuple p = point_tuple(30, 30, 0);
     for (int i = 0; i < 12; i++) {
-        Tuple translated =
-            translation(image_height / 2, image_width / 2, 0) * p;
-        canvas.set_pixel(translated.x, translated.y, {0.65, 0.23, 0.43});
-        canvas.set_pixel(translated.x - 1, translated.y, {0.65, 0.23, 0.43});
-        canvas.set_pixel(translated.x, translated.y - 1, {0.65, 0.23, 0.43});
-        canvas.set_pixel(translated.x + 1, translated.y, {0.65, 0.23, 0.43});
-        canvas.set_pixel(translated.x, translated.y + 1, {0.65, 0.23, 0.43});
+        canvas.set_pixel(p.x, p.y, {0.65, 0.23, 0.43});
+        canvas.set_pixel(p.x - 1, p.y, {0.65, 0.23, 0.43});
+        canvas.set_pixel(p.x, p.y - 1, {0.65, 0.23, 0.43});
+        canvas.set_pixel(p.x + 1, p.y, {0.65, 0.23, 0.43});
+        canvas.set_pixel(p.x, p.y + 1, {0.65, 0.23, 0.43});
         p = transform * p;
     }
     canvas.write_ppm();
