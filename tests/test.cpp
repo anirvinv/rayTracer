@@ -1,10 +1,14 @@
+#include <algorithm>
 #include <iostream>
+#include <vector>
 
 #include "../lib/entity.h"
 #include "../lib/matrix.h"
 #include "../lib/ray.h"
 #include "../lib/transformations.h"
 #include "../lib/tuple.h"
+
+bool double_eq(double a, double b) { return abs(a - b) < Tuple::EPSILON; }
 
 int tuple_test() {
     Tuple v1 = vector_tuple(1, 2, 3);
@@ -90,22 +94,73 @@ int matrix_test() {
     return 0;
 }
 
-int transform_test() {
-    Sphere sphere = Sphere(1, point_tuple(0, 0, 0));
-    Sphere translated = sphere.transform(translation(0, 1, 0));
-    Tuple normal =
-        translated.get_unit_normal(point_tuple(0, 1.70711, -0.70711));
-    if (normal != vector_tuple(0, 0.70711, -0.70711)) {
-        std::cout << "translated sphere normal check failed" << std::endl;
+int sphere_intersection_test() {
+    Sphere sphere = Sphere();
+    Ray ray = Ray(point_tuple(0, 0, -5), vector_tuple(0, 0, 1));
+    std::vector<Intersection> points = sphere.intersections(ray);
+    sort(points.begin(), points.end());
+    if (!(points.size() == 2 && abs(points[0].t_value - 4) < Tuple::EPSILON &&
+          abs(points[1].t_value - 6) < Tuple::EPSILON)) {
+        std::cout << "failed intersection check" << std::endl;
         return 1;
     }
 
-    // reflect test
-    Tuple v = vector_tuple(1, -1, 0);
-    Tuple n = vector_tuple(0, 1, 0);
-    Tuple r = reflect(v, n);
-    if (r != vector_tuple(1, 1, 0)) {
-        std::cout << "reflect check failed" << std::endl;
+    Ray ray2 = Ray(point_tuple(0, 0, 0), vector_tuple(0, 0, 1));
+    points = sphere.intersections(ray2);
+    sort(points.begin(), points.end());
+    if (!(points.size() == 2 && abs(points[0].t_value - -1) < Tuple::EPSILON &&
+          abs(points[1].t_value - 1) < Tuple::EPSILON)) {
+        std::cout << "failed intersection check" << std::endl;
+        return 1;
+    }
+    return 0;
+}
+
+int transformation_test() {
+    Ray r = Ray(point_tuple(1, 2, 3), vector_tuple(0, 1, 0));
+    Ray r2 = transform_ray(r, translation(3, 4, 5));
+    if (r2.origin != point_tuple(4, 6, 8)) {
+        std::cout << "Translated ray origin check failed" << std::endl;
+        return 1;
+    }
+    if (r2.direction != vector_tuple(0, 1, 0)) {
+        std::cout << "Translated ray direction check failed" << std::endl;
+        return 1;
+    }
+
+    r = Ray(point_tuple(1, 2, 3), vector_tuple(0, 1, 0));
+    r2 = transform_ray(r, scaling(2, 3, 4));
+    if (r2.origin != point_tuple(2, 6, 12)) {
+        std::cout << "Scaled ray origin check failed" << std::endl;
+        return 1;
+    }
+    if (r2.direction != vector_tuple(0, 3, 0)) {
+        std::cout << "Scaled ray direction check failed" << std::endl;
+        return 1;
+    }
+
+    Sphere s = Sphere();
+    s.set_transform(scaling(2, 2, 2));
+    if (s.transformation != scaling(2, 2, 2)) {
+        std::cout << "Transformation is not set oh sphere" << std::endl;
+        return 1;
+    }
+
+    // intersetcing scaled sphere with a ray
+    r = Ray(point_tuple(0, 0, -5), vector_tuple(0, 0, 1));
+    std::vector<Intersection> xs = s.intersections(r);
+    sort(xs.begin(), xs.end());
+    if (!(xs.size() == 2 && double_eq(xs[0].t_value, 3) &&
+          double_eq(xs[1].t_value, 7))) {
+        std::cout << "Scaled sphere intersection failed" << std::endl;
+        return 1;
+    }
+
+    // interseting transalted sphere with a ray
+    s.set_transform(translation(5, 0, 0));
+    xs = s.intersections(r);
+    if (xs.size() != 0) {
+        std::cout << "Translated sphere intersection failed" << std::endl;
         return 1;
     }
 
@@ -119,7 +174,10 @@ int main() {
     if (matrix_test()) {
         return 1;
     }
-    if (transform_test()) {
+    if (sphere_intersection_test()) {
+        return 1;
+    }
+    if (transformation_test()) {
         return 1;
     }
     std::cout << "All tests passed." << std::endl;

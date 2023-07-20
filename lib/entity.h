@@ -32,7 +32,7 @@ typedef struct Color {
 } Color;
 
 typedef struct Material {
-    Color color = {1, 1, 1};
+    Color color = {0.94, 0.2, 0.15};
     double ambient = 0.1;
     double diffuse = 0.9;
     double specular = 0.9;
@@ -43,6 +43,8 @@ class Entity;
 typedef struct Intersection {
     double t_value;
     Entity* entity;
+
+    bool operator<(Intersection& other) { return t_value < other.t_value; }
 } Intersection;
 class Entity {
    public:
@@ -55,14 +57,22 @@ class Sphere : public Entity {
    public:
     Tuple center;
     Matrix transformation;
+    Matrix inverse_trans;
     double radius;
-    Sphere(double radius, Tuple center)
-        : center(center), transformation(identity_matrix(4)), radius(radius) {}
+    Sphere()
+        : center(point_tuple(0, 0, 0)),
+          transformation(identity_matrix(4)),
+          inverse_trans(identity_matrix(4)),
+          radius(1) {
+        (void)center;
+    }
 
-    std::vector<Intersection> intersections(Ray& Ray) {
-        Tuple oc = Ray.origin - center;
-        double a = Ray.direction.dot(Ray.direction);
-        double b = 2.0 * oc.dot(Ray.direction);
+    std::vector<Intersection> intersections(Ray& ray) {
+        Ray ray2 = transform_ray(ray, inverse_trans);
+
+        Tuple oc = ray2.origin - center;
+        double a = ray2.direction.dot(ray2.direction);
+        double b = 2.0 * oc.dot(ray2.direction);
         double c = oc.dot(oc) - radius * radius;
         double discriminant = b * b - 4 * a * c;
 
@@ -76,17 +86,24 @@ class Sphere : public Entity {
         }
     }
     Tuple get_unit_normal(Tuple point) {
-        Tuple x = point - center;
-        x = x / radius;
-        // x = (transformation.inverse()).transpose() * x;
-        // x = normalize(x);
-        x.w = 0;
-        return x;
+        // apply the inverse transformation to the point
+        // to get the point in object space
+        // then subtract the center of the sphere
+        // and normalize the resulting vector
+        point = inverse_trans * point;
+        Tuple normal = point - center;
+        normal.w = 0;
+        normal = normalize(normal);
+        return normal;
     }
-
+    void set_transform(Matrix m) {
+        this->transformation = m;
+        this->inverse_trans = m.inverse();
+    }
     Sphere transform(Matrix m) {
-        Sphere result = Sphere(radius, m * center);
+        Sphere result = Sphere();
         result.transformation = (transformation * m);
+        result.inverse_trans = transformation.inverse();
         result.material = material;
         return result;
     }
