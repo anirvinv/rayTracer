@@ -9,8 +9,6 @@
 #include "../lib/tuple.h"
 #include "../lib/world.h"
 
-bool double_eq(double a, double b) { return abs(a - b) < Tuple::EPSILON; }
-
 int tuple_test() {
     Tuple v1 = vector_tuple(1, 2, 3);
     Tuple v2 = vector_tuple(2, 3, 4);
@@ -172,15 +170,105 @@ int world_test() {
     World world = World();
     if (world.entities.size() != 0 ||
         world.light_source.position != point_tuple(0, 0, 0)) {
-        std::cout << "Default world initialization failed" << std::endl;
+        std::cout << "Empty world initialization failed" << std::endl;
         return 1;
     }
-    std::vector<Entity> entities{Sphere(), Sphere()};
-    world.set_entities(entities);
+    Sphere s1 = Sphere();
+    s1.set_transform(scaling(0.5, 0.5, 0.5));
 
+    Sphere s2 = Sphere();
+    std::vector<Entity*> entities{&s1, &s2};
+    world.set_entities(entities);
+    Ray ray = Ray(point_tuple(0, 0, -5), vector_tuple(0, 0, 1));
+    std::vector<Intersection> xs = world.intersections(ray);
+    if (!(xs.size() == 4 && double_eq(xs[0].t_value, 4) &&
+          double_eq(xs[1].t_value, 4.5) && double_eq(xs[2].t_value, 5.5) &&
+          double_eq(xs[3].t_value, 6))) {
+        std::cout << "World intersection failed" << std::endl;
+        return 1;
+    }
+
+    std::vector<Intersection> vec = s2.intersections(ray);
+    IntersectionInfo info = compute_info(vec[0], ray);
+    if (info.t_value != vec[0].t_value ||
+        info.entity_ptr != vec[0].entity_ptr ||
+        info.eyev != vector_tuple(0, 0, -1) ||
+        info.point != point_tuple(0, 0, -1) ||
+        info.normalv != vector_tuple(0, 0, -1)) {
+        std::cout << "failed intersection info test" << std::endl;
+        return 1;
+    }
     return 0;
 }
 
+int shade_test() {
+    World* world = default_world();
+
+    Ray ray = Ray(point_tuple(0, 0, -5), vector_tuple(0, 0, 1));
+    Intersection i = Intersection(4.0, world->entities[0]);
+    IntersectionInfo info = compute_info(i, ray);
+    Color c = shade_hit(*world, info);
+    Color expected = {0.380661, 0.475826, 0.285496};
+
+    if (c != expected) {
+        std::cout << "shade hit failed" << std::endl;
+        std::cout << "expected: ";
+        expected.print();
+        std::cout << "output: ";
+        c.print();
+        delete_default_world(world);
+        return 1;
+    }
+    world->light_source = {point_tuple(0, 0.25, 0), {1, 1, 1}};
+    ray = Ray(point_tuple(0, 0, 0), vector_tuple(0, 0, 1));
+    i = Intersection(0.5, world->entities[1]);
+    info = compute_info(i, ray);
+    c = shade_hit(*world, info);
+    expected = {0.904984, 0.904984, 0.904984};
+    if (c != expected) {
+        std::cout << "shade hit failed" << std::endl;
+        std::cout << "expected: ";
+        expected.print();
+        std::cout << "output: ";
+        c.print();
+        delete_default_world(world);
+        return 1;
+    }
+
+    delete_default_world(world);
+    return 0;
+}
+int color_test() {
+    World* world = default_world();
+    Ray ray = Ray(point_tuple(0, 0, -5), vector_tuple(0, 1, 0));
+    Color c = color_at(*world, ray);
+    Color expected = {0, 0, 0};
+    if (c != expected) {
+        std::cout << "color at failed" << std::endl;
+        std::cout << "expected: ";
+        expected.print();
+        std::cout << "output: ";
+        c.print();
+        delete_default_world(world);
+        return 1;
+    }
+
+    ray = Ray(point_tuple(0, 0, -5), vector_tuple(0, 0, 1));
+    expected = {0.380661, 0.475826, 0.285496};
+    c = color_at(*world, ray);
+    if (c != expected) {
+        std::cout << "color at failed" << std::endl;
+        std::cout << "expected: ";
+        expected.print();
+        std::cout << "output: ";
+        c.print();
+        delete_default_world(world);
+        return 1;
+    }
+
+    delete_default_world(world);
+    return 0;
+}
 int main() {
     if (tuple_test()) {
         return 1;
@@ -195,6 +283,12 @@ int main() {
         return 1;
     }
     if (world_test()) {
+        return 1;
+    }
+    if (shade_test()) {
+        return 1;
+    }
+    if (color_test()) {
         return 1;
     }
     std::cout << "All tests passed." << std::endl;

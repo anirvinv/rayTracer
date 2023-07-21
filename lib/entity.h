@@ -9,6 +9,7 @@
 #include "ray.h"
 #include "tuple.h"
 
+bool double_eq(double a, double b) { return abs(a - b) < Tuple::EPSILON; }
 typedef struct Color {
     double r;
     double g;
@@ -28,11 +29,19 @@ typedef struct Color {
                         this->b * other.b};
         return result;
     }
-
+    bool operator==(Color other) {
+        return double_eq(this->r, other.r) && double_eq(this->g, other.g) &&
+               double_eq(this->b, other.b);
+    }
+    bool operator!=(Color other) { return !(*this == other); }
+    void print() {
+        std::cout << "Color(" << r << ", " << g << ", " << b << ")"
+                  << std::endl;
+    }
 } Color;
 
 typedef struct Material {
-    Color color = {0.94, 0.2, 0.15};
+    Color color = {1, 1, 1};
     double ambient = 0.1;
     double diffuse = 0.9;
     double specular = 0.9;
@@ -42,13 +51,22 @@ typedef struct Material {
 class Entity;
 typedef struct Intersection {
     double t_value;
-    Entity* entity;
+    Entity* entity_ptr;
+
+    Intersection(double t_value, Entity* entity_ptr)
+        : t_value(t_value), entity_ptr(entity_ptr) {}
 
     bool operator<(Intersection& other) { return t_value < other.t_value; }
 } Intersection;
 class Entity {
    public:
+    Matrix transformation;
+    Matrix inverse_trans;
     Material material;
+    Entity()
+        : transformation(identity_matrix(4)),
+          inverse_trans(identity_matrix(4)) {}
+    virtual ~Entity() {}
     virtual std::vector<Intersection> intersections(Ray& Ray) = 0;
     virtual Tuple get_unit_normal(Tuple point) = 0;
 };
@@ -56,17 +74,11 @@ class Entity {
 class Sphere : public Entity {
    public:
     Tuple center;
-    Matrix transformation;
-    Matrix inverse_trans;
     double radius;
-    Sphere()
-        : center(point_tuple(0, 0, 0)),
-          transformation(identity_matrix(4)),
-          inverse_trans(identity_matrix(4)),
-          radius(1) {
+    Sphere() : Entity(), center(point_tuple(0, 0, 0)), radius(1) {
         (void)center;
     }
-
+    ~Sphere() {}
     std::vector<Intersection> intersections(Ray& ray) {
         Ray ray2 = transform_ray(ray, inverse_trans);
 
@@ -106,27 +118,6 @@ class Sphere : public Entity {
         result.inverse_trans = transformation.inverse();
         result.material = material;
         return result;
-    }
-};
-
-class Plane : public Entity {
-   public:
-    Tuple normal;
-    Tuple point;
-    Plane(Tuple normal, Tuple point) : normal(normal), point(point) {}
-
-    std::vector<Intersection> intersections(Ray& Ray) {
-        double t = (point - Ray.origin).dot(normal) / Ray.direction.dot(normal);
-        if (t < 0) {
-            return std::vector<Intersection>{};
-        } else {
-            std::vector<Intersection> res{{t, this}};
-            return res;
-        }
-    }
-    Tuple get_unit_normal(Tuple point) {
-        (void)point;  // to silence compiler warning about unused parameters
-        return normal;
     }
 };
 
